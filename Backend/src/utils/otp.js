@@ -25,7 +25,8 @@ const getModelByRole = (role) => {
 };
 
 export const generateAndSendOTP = async (donationId, role) => {
-    const Model = getModelByRole(role);
+    try{
+        const Model = getModelByRole(role);
     let donation;
 
     if (role === 'individual') {
@@ -66,7 +67,20 @@ export const generateAndSendOTP = async (donationId, role) => {
     });
 
     return otp;
-};
+    }
+    catch (error) {
+
+        if (error.code === 20003) {
+            console.error('Twilio authentication failed. Please check your credentials.');
+            console.log(`Twilio Account SID: ${accountSid}`);
+            console.log(`Twilio Auth Token: ${authToken ? 'Loaded' : 'Not Loaded'}`);
+            console.log(`Twilio Phone Number: ${process.env.TWILIO_PHONE_NUMBER}`);
+        } else {
+            console.error('Error sending OTP:', error);
+        }
+        throw error;
+    }};
+    
 
 export const verifyOTP = async (donationId, otp, role) => {
     const Model = getModelByRole(role);

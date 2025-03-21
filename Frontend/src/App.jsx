@@ -24,7 +24,7 @@ import Recipe_Bot from './pages/Recipe_Bot/Recipe_Bot.jsx';
 import SingleMealStatus from './Components/Consumer/SingleMealStatus.jsx';
 //import Google_Translate from './Components/Google_Translate.jsx';
 import NgoCurrentAcceptPage from './Components/NGO/ngocurrentaccept.jsx';
-
+import ChatBot from './Components/Chat-bot/Chat-bot.jsx';
 function App() {
   return (
     <Router>
@@ -50,6 +50,7 @@ function App() {
           <Route path="/current-donation" element={<NgoCurrentDonationPage />} />
           <Route path="/recipe-bot" element={<Recipe_Bot />} />
           <Route path="/single-meal-status" element={<SingleMealStatus/>} />
+          <Route path="/chat-bot" element={<ChatBot />} />
         </Routes>
      
     </Router>

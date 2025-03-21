@@ -375,30 +375,34 @@ const getDonationHistory = asyncHandler(async (req, res) => {
 });
 
 const getActiveDonation = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+    try {
+        const userId = req.user?._id; // Ensure userId exists
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
 
-    if (!userId) {
-        throw new ApiError(400, "User ID is required");
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const activeDonation = await SingleMeal.findOne({
+            donor: userId,
+            status: { $in: ["Accepted", "Out for Delivery"] },
+        }).populate("donor", "name").populate("acceptedBy", "name");
+
+        if (!activeDonation) {
+            return res.status(200).json({ message: "No active donation found", data: null });
+        }
+
+        return res.status(200).json({ data: activeDonation, message: "Active donation fetched successfully" });
+    } catch (error) {
+        console.error("Error in getActiveDonation:", error); // Log the actual error
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
-
-    // Check if the user exists
-    const user = await User.findById(userId);
-    if (!user) {
-        throw new ApiError(404, "User not found");
-    }
-
-    // Fetch the active donation for the user
-    const activeDonation = await SingleMeal.findOne({
-        donor: userId,
-        status: { $in: ["Accepted", "Out for Delivery"] },
-    }).populate("donor", "name").populate("acceptedBy", "name");
-
-    if (!activeDonation) {
-        throw new ApiError(404, "No active donation found");
-    }
-
-    return res.status(200).json(new ApiResponse(200, activeDonation, "Active donation fetched successfully"));
 });
+
+
 
 
 const updateDonationStatus = asyncHandler(async (req, res) => {

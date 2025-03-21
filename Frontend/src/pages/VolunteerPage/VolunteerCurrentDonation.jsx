@@ -6,6 +6,9 @@ const VolunteerCurrentDonation = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [otp, setOtp] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
+  const [remainingQuantity, setRemainingQuantity] = useState(0);
+  const [currentLocation, setCurrentLocation] = useState({ latitude: null, longitude: null });
 
   useEffect(() => {
     axios
@@ -24,6 +27,23 @@ const VolunteerCurrentDonation = () => {
         setDonation(null);
         setLoading(false);
       });
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Failed to get your location. Please enable GPS.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
   }, []);
 
   const getRoute = async () => {
@@ -78,6 +98,28 @@ const VolunteerCurrentDonation = () => {
     } catch (error) {
       console.error("Error updating status:", error);
       alert("Failed to update status");
+    }
+    setUpdating(false);
+  };
+
+  const handleDelivered = () => {
+    setShowPopup(true);
+  };
+
+  const handlePopupSubmit = async (event) => {
+    event.preventDefault();
+    setUpdating(true);
+    try {
+      const response = await axios.post(`/api/v1/volunteers/update-delivery-status/${donation._id}`, {
+        remainingQuantity,
+        currentLocation,
+      });
+      setDonation({ ...donation, status: 'Delivered' });
+      setShowPopup(false);
+      alert(response.data.message);
+    } catch (error) {
+      console.error("Error updating delivery status:", error);
+      alert("Failed to update delivery status");
     }
     setUpdating(false);
   };
@@ -141,7 +183,7 @@ const VolunteerCurrentDonation = () => {
                 {donation.status === "Out for Delivery" && (
                   <button
                     className="bg-green-500 text-white px-3 py-1 ml-2 rounded"
-                    onClick={() => updateStatus("Delivered")}
+                    onClick={handleDelivered}
                     disabled={updating}
                   >
                     Delivered
@@ -153,6 +195,29 @@ const VolunteerCurrentDonation = () => {
         </table>
       ) : (
         <div>No donation data available.</div>
+      )}
+
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-4 rounded shadow-lg">
+            <h2 className="text-lg font-bold mb-4">Enter Remaining Quantity</h2>
+            <form onSubmit={handlePopupSubmit}>
+              <label htmlFor="remainingQuantity" className="block mb-2">Remaining Quantity:</label>
+              <input
+                type="number"
+                id="remainingQuantity"
+                value={remainingQuantity}
+                onChange={(e) => setRemainingQuantity(e.target.value)}
+                min="0"
+                max={donation.quantity}
+                required
+                className="border px-2 py-1 rounded w-full mb-4"
+              />
+              <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+              <button type="button" className="bg-gray-500 text-white px-4 py-2 rounded ml-2" onClick={() => setShowPopup(false)}>Cancel</button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

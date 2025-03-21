@@ -28,27 +28,9 @@ const Login = ({ closeModal }) => {
         agreeToTerms: false
     });
     const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [showOtpModal, setShowOtpModal] = useState(false); // New state for OTP modal
+    const [otp, setOtp] = useState("");
     const navigate = useNavigate();
-
-    // const fetchCurrentLocation = () => {
-    //     if ("geolocation" in navigator) {
-    //         navigator.geolocation.getCurrentPosition(
-    //             (position) => {
-    //                 setFormData(prev => ({
-    //                     ...prev,
-    //                     latitude: position.coords.latitude.toString(),
-    //                     longitude: position.coords.longitude.toString()
-    //                 }));
-    //                 toast.success("Location fetched successfully!");
-    //             },
-    //             (error) => {
-    //                 toast.error("Error getting location: " + error.message);
-    //             }
-    //         );
-    //     } else {
-    //         toast.error("Geolocation is not supported by your browser");
-    //     }
-    // };
 
     const fetchCurrentLocation = () => {
         if ("geolocation" in navigator) {
@@ -157,93 +139,112 @@ const Login = ({ closeModal }) => {
         }
     };
 
-    const registerHandler = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-    
+        // Function to send OTP
+    const sendOtpHandler = async () => {
         try {
-            // Validation checks
-            if (!formData.agreeToTerms) {
-                toast.error("Please agree to Terms & Conditions");
-                return;
-            }
-    
-            if (!formData.latitude || !formData.longitude) {
-                toast.error("Please fetch your current location");
-                return;
-            }
-    
-            // Check if document is required for selected role
-            const requiresDoc = ['restaurant', 'ngo', 'catering/university mess'].includes(formData.role);
-            if (requiresDoc && !formData.verificationDoc) {
-                toast.error("Please upload verification document");
-                return;
-            }
-    
-            // Create FormData object
-            const formDataToSend = new FormData();
-    
-            // Append all form fields except verificationDoc and agreeToTerms
-            Object.keys(formData).forEach(key => {
-                if (key !== 'verificationDoc' && key !== 'agreeToTerms') {
-                    formDataToSend.append(key, formData[key]);
-                }
-            });
-    
-            // Append file if exists
-            if (formData.verificationDoc) {
-                formDataToSend.append('verificationDoc', formData.verificationDoc);
-                console.log("Adding file to form data:", formData.verificationDoc.name);
-            }
-    
-            console.log("Sending registration request...");
-            
-            const response = await axios.post("/api/v1/auth/register", formDataToSend, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-    
-            console.log("Registration response:", response);
-    
-            if (response.status === 201) {
-                toast.success("Registration Successful!");
-                
-                // Clear form data
-                setFormData({
-                    email: "",
-                    password: "",
-                    name: "",
-                    address: "",
-                    latitude: "",
-                    longitude: "",
-                    pincode: "",
-                    role: "individual",
-                    phoneNumber: "",
-                    verificationDoc: null,
-                    agreeToTerms: false
-                });
-    
-                // Switch to login view
-                setTimeout(() => {
-                    setIsLogin(true);
-                }, 1000);
+            const response = await axios.post("/api/v1/auth/send-otp", { email: formData.email });
+            if (response.data.success) {
+                toast.success("OTP sent to your email!");
+                setShowOtpModal(true); // Show OTP modal
+            } else {
+                toast.error(response.data.message || "Failed to send OTP");
             }
         } catch (error) {
-            console.error("Registration error:", error);
-            toast.error(error.response?.data?.message || "Registration Failed", {
-                position: "top-center",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-        } finally {
-            setIsLoading(false);
+            toast.error("Error sending OTP");
         }
     };
+
+    // Function to verify OTP and complete registration
+    // Function to handle registration
+const registerHandler = async (e) => {
+    e.preventDefault();
+
+    // Validation checks
+    if (!formData.agreeToTerms) {
+        toast.error("Please agree to Terms & Conditions");
+        return;
+    }
+
+    if (!formData.latitude || !formData.longitude) {
+        toast.error("Please fetch your current location");
+        return;
+    }
+
+    // Check if document is required for selected role
+    const requiresDoc = ['restaurant', 'ngo', 'catering/university mess'].includes(formData.role);
+    if (requiresDoc && !formData.verificationDoc) {
+        toast.error("Please upload verification document");
+        return;
+    }
+
+    try {
+        // Step 1: Send OTP to the user's email
+        const response = await axios.post("/api/v1/auth/send-otp", { email: formData.email });
+        if (response.data.success) {
+            toast.success("OTP sent to your email!");
+            setShowOtpModal(true); // Show OTP modal
+        } else {
+            toast.error(response.data.message || "Failed to send OTP");
+        }
+    } catch (error) {
+        toast.error("Error sending OTP");
+    }
+};
+
+// Function to verify OTP and complete registration
+const verifyOtpAndRegister = async () => {
+    try {
+        const formDataToSend = new FormData();
+
+        // Append all form fields except verificationDoc and agreeToTerms
+        Object.keys(formData).forEach((key) => {
+            if (key !== "verificationDoc" && key !== "agreeToTerms") {
+                formDataToSend.append(key, formData[key]);
+            }
+        });
+
+        // Append file if exists
+        if (formData.verificationDoc) {
+            formDataToSend.append("verificationDoc", formData.verificationDoc);
+        }
+
+        // Add OTP to the form data
+        formDataToSend.append("otp", otp);
+
+        const response = await axios.post("/api/v1/auth/register", formDataToSend, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        if (response.status === 201) {
+            toast.success("Registration Successful!");
+            setShowOtpModal(false); // Close OTP modal
+
+            // Clear form data
+            setFormData({
+                email: "",
+                password: "",
+                name: "",
+                address: "",
+                latitude: "",
+                longitude: "",
+                pincode: "",
+                role: "individual",
+                phoneNumber: "",
+                verificationDoc: null,
+                agreeToTerms: false,
+            });
+
+            // Switch to login view
+            setTimeout(() => {
+                setIsLogin(true);
+            }, 1000);
+        }
+    } catch (error) {
+        toast.error(error.response?.data?.message || "Registration Failed");
+    }
+};
     
     useEffect(() => {
         AOS.init({ duration: 1000 });
@@ -503,6 +504,35 @@ const Login = ({ closeModal }) => {
                     </div>
                 </form>
             </div>
+
+            {/* OTP Modal */}
+        {showOtpModal && (
+            <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                    <h3 className="text-2xl font-bold text-green-800 mb-4">Verify OTP</h3>
+                    <p className="text-gray-600 mb-4">Enter the OTP sent to your email:</p>
+                    <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+                        placeholder="Enter OTP"
+                    />
+                    <button
+                        onClick={verifyOtpAndRegister}
+                        className="w-full p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
+                    >
+                        Verify OTP
+                    </button>
+                    <button
+                        onClick={() => setShowOtpModal(false)}
+                        className="w-full p-3 mt-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-colors duration-300"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        )}
 
             {showForgotPassword && (
     <div className="fixed inset-0 flex items-center justify-center z-50">

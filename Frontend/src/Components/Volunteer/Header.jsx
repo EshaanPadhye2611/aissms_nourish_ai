@@ -9,30 +9,30 @@ const Header_1 = () => {
   const [activeSince, setActiveSince] = useState(3);
 
   useEffect(() => {
-    const fetchFoodItems = async () => {
-      try {
-        const response = await axios.get("/api/v1/volunteers/getFoodItems", {
-          withCredentials: true,
-        });
-        const items = response.data.data || [];
+    // const fetchFoodItems = async () => {
+    //   try {
+    //     const response = await axios.get("/api/v1/volunteers/getFoodItems", {
+    //       withCredentials: true,
+    //     });
+    //     const items = response.data.data || [];
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    //     const today = new Date();
+    //     today.setHours(0, 0, 0, 0);
 
-        const expiringItems = items.filter((item) => {
-          if (!item.expiryDate) return false;
-          const expiryDate = new Date(item.expiryDate);
-          expiryDate.setHours(0, 0, 0, 0);
+    //     const expiringItems = items.filter((item) => {
+    //       if (!item.expiryDate) return false;
+    //       const expiryDate = new Date(item.expiryDate);
+    //       expiryDate.setHours(0, 0, 0, 0);
 
-          const daysDiff = (expiryDate - today) / (1000 * 60 * 60 * 24);
-          return daysDiff >= 0 && daysDiff <= 3;
-        });
+    //       const daysDiff = (expiryDate - today) / (1000 * 60 * 60 * 24);
+    //       return daysDiff >= 0 && daysDiff <= 3;
+    //     });
 
-        setExpiringSoonItems(expiringItems);
-      } catch (err) {
-        console.error("Failed to fetch food items:", err);
-      }
-    };
+    //     setExpiringSoonItems(expiringItems);
+    //   } catch (err) {
+    //     console.error("Failed to fetch food items:", err);
+    //   }
+    // };
 
     const fetchDonationHistory = async () => {
       try {
@@ -52,7 +52,7 @@ const Header_1 = () => {
       }
     };
 
-    fetchFoodItems();
+    // fetchFoodItems();
     fetchDonationHistory();
     setActiveSince(Math.floor(Math.random() * 4) + 3);
   }, []);
@@ -60,7 +60,7 @@ const Header_1 = () => {
   return (
     <div className="grid grid-cols-4 gap-6 p-6">
       {/* Expiring Soon Box */}
-      <div className="bg-white shadow-lg rounded-2xl p-6 text-center border border-gray-300 hover:shadow-xl transition">
+      {/* <div className="bg-white shadow-lg rounded-2xl p-6 text-center border border-gray-300 hover:shadow-xl transition">
         <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
           <AlertTriangle className="text-red-500 w-6 h-6" />
           Expiring Soon
@@ -71,7 +71,7 @@ const Header_1 = () => {
             ? `⚠️ ${expiringSoonItems[0].name} expiring soon`
             : "No items expiring soon"}
         </span>
-      </div>
+      </div> */}
 
       {/* Food Distributed Box */}
       <div className="bg-white shadow-lg rounded-2xl p-6 text-center border border-gray-300 hover:shadow-xl transition">

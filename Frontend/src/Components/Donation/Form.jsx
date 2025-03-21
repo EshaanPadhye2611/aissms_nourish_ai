@@ -92,6 +92,7 @@ const Form = ({ closeModal, updateFoodItems }) => {
         toast.error("Failed to submit donation. Please try again.", { position: "top-center", autoClose: 3000 });
       }
     } catch (error) {
+      console.log("Submitting Data:", formattedData);
       console.error("Error submitting form:", error);
       toast.error("An error occurred. Please try again later.", { position: "top-center", autoClose: 3000 });
     }

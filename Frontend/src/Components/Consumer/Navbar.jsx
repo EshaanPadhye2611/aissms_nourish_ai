@@ -24,15 +24,22 @@ const NavBar = () => {
 
     const checkActiveDonation = async () => {
       try {
-        const response = await axios.get("/api/v1/users/getActiveDonation", {
-          withCredentials: true,
-        });
-        setActiveDonationExists(!!response.data.data);
+          const response = await axios.get("/api/v1/users/active-donation", {
+              withCredentials: true,
+          });
+  
+          if (response.data?.data) {
+              setActiveDonationExists(true);
+          } else {
+              setActiveDonationExists(false);
+          }
       } catch (err) {
-        console.error("Error fetching active donation:", err);
-        setActiveDonationExists(false);
+          console.error("Error fetching active donation:", err.response?.data?.message || err.message);
+          setActiveDonationExists(false);
       }
-    };
+  };
+  
+  
 
     checkActiveDonation();
   }, []);

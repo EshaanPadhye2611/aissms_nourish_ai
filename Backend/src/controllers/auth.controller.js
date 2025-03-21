@@ -2,8 +2,34 @@ import { User } from "../models/user.models.js"
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { sendOTP, verifyOTP } from "../utils/otpVerification.js";
+
+/**
+ * Function to send OTP before registration
+ */
+export const sendOtp = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+  
+    try {
+      const otpSent = await sendOTP(email);
+      if (!otpSent) {
+        return res.status(500).json({ message: "Failed to send OTP" });
+      }
+      res.status(200).json({ success: true, message: "OTP sent successfully" });
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      res.status(500).json({ message: "Error sending OTP" });
+    }
+  };
 
 const registerUser = async(req, res) => {
+    const { email, otp } = req.body;
+    if (!verifyOTP(email, otp)) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
     try {
         console.log("Registration request received:", {
             body: req.body,

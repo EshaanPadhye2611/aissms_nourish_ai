@@ -86,7 +86,7 @@ const DonationHistory = ({ onClose }) => {
                     key={donation._id}
                     className="hover:bg-gray-50 transition duration-300"
                   >
-                    <td className="py-3 px-4 border-b">{donation.mealDescription}</td>
+                    <td className="py-3 px-4 border-b">{donation.foodName}</td>
                     <td className="py-3 px-4 border-b">{donation.quantity}</td>
                     <td className="py-3 px-4 border-b">
                       {new Date(donation.schedulePickUp).toLocaleDateString()}

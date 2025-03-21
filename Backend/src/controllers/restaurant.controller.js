@@ -10,7 +10,7 @@ import { Ngo } from "../models/ngo.models.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-
+import { generateAndSendOTPForDonation } from "../utils/donationotp.js";
 
 const generateAccessToken = async(userId) => {
     try{
@@ -288,7 +288,7 @@ const donateFoodItem = asyncHandler(async (req, res) => {
     });
 
     await foodDonation.save();
-
+    await generateAndSendOTPForDonation(foodDonation._id);
     return res.status(201).json(new ApiResponse(201, foodDonation, "Food item donated successfully"));
 });  
 

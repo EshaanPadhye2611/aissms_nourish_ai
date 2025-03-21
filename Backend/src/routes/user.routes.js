@@ -28,7 +28,6 @@ router.put('/update-status/:donationId',verifyUserJWT, authorizeRoles("individua
 
 router.route("/active-meals").get(verifyUserJWT, authorizeRoles("individual"), getActiveMeals);
 
-router.get('/:userId', verifyUserJWT, getUserById);
 
 router.get("/user-ranking", 
     verifyUserJWT, 
@@ -36,9 +35,6 @@ router.get("/user-ranking",
     getUserLeaderboard
 );
 
-
-
-
-
+router.get('/:userId', verifyUserJWT, getUserById);
 
 export default router;
